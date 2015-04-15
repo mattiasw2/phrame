@@ -1,0 +1,5 @@
+{;; Directory to look up OAuth tokens in
+ :token-directory "/tmp"
+ ;; OAuth client parameters
+ :oauth-client-id "*client-id*"
+ :oauth-client-secret "*client-secret*"}
