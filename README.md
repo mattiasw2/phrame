@@ -15,6 +15,7 @@ https://developers.google.com/picasa-web/docs/2.0/developers_guide_java#ListAlbu
 https://developers.google.com/gdata/javadoc/com/google/gdata/data/photos/package-summary
 http://raspberrypi.stackexchange.com/questions/8922/how-do-i-display-images-without-starting-x11
 http://stackoverflow.com/questions/11390596/how-to-display-image-in-pygame
+http://stackoverflow.com/questions/20002242/how-to-scale-images-to-screen-size-in-pygame
 
 ### OAuth2 with Google + PicasaWeb
 
