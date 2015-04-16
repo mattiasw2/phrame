@@ -35,12 +35,16 @@
       xml/parse
       xml-zip))
 
-(defn api-get [user url]
-  (-> (http/get url
-                {:headers {"GData-Version" "2"
-                           "Authorization" (str "Bearer " (access-token user))}})
-      :body
-      xml-zip-string))
+(defn api-get
+  ([user url]
+   (api-get user url {}))
+  ([user url query-params]
+   (-> (http/get url
+                 {:headers {"GData-Version" "2"
+                            "Authorization" (str "Bearer " (access-token user))}
+                  :query-params query-params})
+       :body
+       xml-zip-string)))
 
 (defn ensure-coll [x]
   (if (coll? x)
@@ -71,11 +75,11 @@
   (map make-album (xml-> (api-get user "https://picasaweb.google.com/data/feed/api/user/default")
                          :entry)))
 
-(defn canonical-link [xml]
+(defn jpeg-link [xml]
   (xml1-> xml
-          :link
-          (zip-xml/attr= :rel "http://schemas.google.com/photos/2007#canonical")
-          (zip-xml/attr :href)))
+          :media:group
+          :media:content
+          (zip-xml/attr :url)))
 
 (defn make-photo [xml]
   (xml-to-map xml
@@ -85,9 +89,11 @@
                :width [:gphoto:width parse-integer]
                :height [:gphoto:height parse-integer]
                :size [:gphoto:size parse-integer]
-               :url canonical-link}))
+               :url jpeg-link}))
 
 (defn get-images [user album]
-  (map make-photo (xml-> (api-get user (str "https://picasaweb.google.com/data/feed/api/user/default/albumid/"
-                                            (:id album)))
+  (map make-photo (xml-> (api-get user
+                                  (str "https://picasaweb.google.com/data/feed/api/user/default/albumid/"
+                                       (:id album))
+                                  {"imgmax" "d"})
                          :entry)))
