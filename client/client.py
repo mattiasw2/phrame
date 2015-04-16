@@ -2,8 +2,9 @@
 
 import websocket
 import logging
-import commands
 import sys
+
+import commands
 
 logging.basicConfig()
 
