@@ -2,9 +2,9 @@
 
 Software to run on Raspberry Pi based photo frame.
 
-## Usage
+## Client install
 
-FIXME
+    $ sudo pip install websocket-client
 
 ## Links
 
