@@ -1,4 +1,4 @@
-(ns phrame.core
+(ns phrame.picasa-web-albums
   (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clojure.instant :as instant]
