@@ -8,6 +8,10 @@
     (println "connection established")
     (http-server/on-close channel (fn [status] (println "channel closed: " status)))
     (http-server/send! channel "hello")
+    (http-server/send! channel "test 123")
+    (http-server/send! channel "test2 123 456 ")
+    (http-server/send! channel "test2 456")
+    (http-server/send! channel "test2 123 456 789 ")
     (reset! client channel)))
 
 (defonce server (atom nil))
