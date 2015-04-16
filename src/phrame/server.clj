@@ -6,13 +6,12 @@
 (defn handler [request]
   (http-server/with-channel request channel
     (println "connection established")
-    (http-server/on-close channel (fn [status] (println "channel closed: " status)))
-    (http-server/send! channel "hello")
-    (http-server/send! channel "test 123")
-    (http-server/send! channel "test2 123 456 ")
-    (http-server/send! channel "test2 456")
-    (http-server/send! channel "test2 123 456 789 ")
-    (reset! client channel)))
+    (http-server/on-close channel
+                          (fn [status]
+                            (println "channel closed: " status)))
+    (reset! client channel)
+    (http-server/send! channel "load http://upload.wikimedia.org/wikipedia/commons/2/27/IBM-S360-67ConfigurationConsoleCloseup.jpg")
+    (http-server/send! channel "flip")))
 
 (defonce server (atom nil))
 
