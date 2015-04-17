@@ -1,6 +1,7 @@
 (ns phrame.server
   (:require [org.httpkit.server :as http-server]
             [compojure.core :as compojure]
+            [phram.config :refer [config]]
             [phrame client-handlers oauth-handlers]))
 
 (defonce server (atom nil))
@@ -13,4 +14,4 @@
   (when @server
     (@server))
   (reset! server
-          (http-server/run-server handler {:port 9090})))
+          (http-server/run-server handler {:port (:port config 9090)})))
