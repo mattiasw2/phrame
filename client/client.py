@@ -22,7 +22,7 @@ def on_message(ws, message):
     else:
         print "unknown command", command
 
-ws = websocket.WebSocketApp("ws://localhost:9090/websocket",
+ws = websocket.WebSocketApp(sys.argv[1],
                             on_message = on_message)
 
 ws.run_forever()
