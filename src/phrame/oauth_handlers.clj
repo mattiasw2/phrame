@@ -1,6 +1,5 @@
 (ns phrame.oauth-handlers
   (:require [clojure.java.io :as io]
-            [clojure.edn :as edn]
             [clojure.pprint :refer [pprint]]
             [clj-http.client :as http]
             [clj-oauth2.client :as oauth2]
@@ -8,11 +7,10 @@
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [ring.middleware.params :refer [wrap-params]]
             [compojure.core :refer [GET] :as compojure]
-            [ring.adapter.jetty :as jetty]))
+            [ring.adapter.jetty :as jetty]
+            [phrame.config :refer [config]]))
 
-(def config (edn/read-string (slurp (io/resource "config.edn"))))
-
-(def oauth-params (merge {;; These should be set in the oauth-params.edn file
+(def oauth-params (merge {;; These should be set in the config.edn file
                           :redirect-uri "https://example.com.com/oauth2callback"
                           :client-id "*google-client-id*"
                           :client-secret "*google-client-secret*"
