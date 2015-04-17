@@ -3,6 +3,7 @@
 import websocket
 import logging
 import sys
+import ssl
 
 import commands
 
@@ -22,7 +23,11 @@ def on_message(ws, message):
     else:
         print "unknown command", command
 
+def on_error(ws, message):
+    print "websocket error:", message
+
 ws = websocket.WebSocketApp(sys.argv[1],
+                            on_error = on_error,
                             on_message = on_message)
 
-ws.run_forever()
+ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
