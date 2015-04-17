@@ -9,6 +9,7 @@
                  [org.clojure/data.zip "0.1.1"]
                  [clj-http "1.1.0"]
                  [http-kit "2.1.16"]
+                 [sudharsh/clj-oauth2 "0.5.3"]
                  [ring "1.3.2"]
                  [compojure "1.3.3"]
                  [org.apache.httpcomponents/httpclient "4.3.5"]])
