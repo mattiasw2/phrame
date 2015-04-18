@@ -2,7 +2,8 @@
   (:require [org.httpkit.server :as http-server]
             [compojure.core :as compojure]
             [phrame.config :refer [config]]
-            [phrame client-handlers oauth-handlers]))
+            [phrame.client-handlers]
+            [phrame.oauth-handlers]))
 
 (defonce server (atom nil))
 
