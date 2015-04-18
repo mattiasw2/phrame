@@ -34,6 +34,16 @@ def load(url):
 def flip():
     pygame.display.flip()
 
+def ping():
+    pass
+
+def login(status):
+    if status == "accepted":
+        print "Login accepted"
+    else:
+        print "Could not login in,", status
+        sys.exit(1)
+
 token_file = os.path.expanduser("~/.phrame.token")
 
 def get_token():
