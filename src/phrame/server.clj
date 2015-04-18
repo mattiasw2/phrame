@@ -16,3 +16,6 @@
     (@server))
   (reset! server
           (http-server/run-server handler {:port (:port config 9090)})))
+
+(defn -main [& args]
+  (start-server))

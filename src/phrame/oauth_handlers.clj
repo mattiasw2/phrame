@@ -8,7 +8,8 @@
             [ring.middleware.params :refer [wrap-params]]
             [compojure.core :refer [GET] :as compojure]
             [ring.adapter.jetty :as jetty]
-            [phrame.config :refer [config]]))
+            [phrame.config :refer [config]]
+            [phrame.storage :as storage]))
 
 (def oauth-params (merge {;; These should be set in the config.edn file
                           :redirect-uri "https://example.com.com/oauth2callback"
@@ -20,23 +21,21 @@
                           :access-token-uri "https://accounts.google.com/o/oauth2/token"
                           :access-query-param :access_token
                           :grant-type "authorization_code"
-                          :access-type "online"
-                          :approval_prompt ""}
+                          :access-type "online"}
                          (:oauth-params config)))
 
 (def auth-request (oauth2/make-auth-request oauth-params))
 
 (defn save-token [req]
-  (let [token (oauth2/get-access-token oauth-params
-                                       (:params req)
-                                       auth-request)
-        token-info (:body (http/get "https://www.googleapis.com/oauth2/v1/tokeninfo"
-                                    {:query-params {:access_token (:access-token token)}
+  (let [{:keys [access-token refresh-token]} (oauth2/get-access-token oauth-params
+                                                                      (:params req)
+                                                                      auth-request)
+        {:keys [email]} (:body (http/get "https://www.googleapis.com/oauth2/v1/tokeninfo"
+                                    {:query-params {:access_token access-token}
                                      :as :json}))]
-    (with-open [out (io/writer (io/file (:token-directory config "/tmp") (:email token-info)))]
-      (pprint {:token token
-               :info token-info}
-              out))
+    (storage/swap! assoc-in [:users email]
+                   {:email email
+                    :refresh-token refresh-token})
     (response/redirect (:success-url config "/"))))
 
 (def routes

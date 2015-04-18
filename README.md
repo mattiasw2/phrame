@@ -23,6 +23,8 @@ http://holtstrom.com/michael/blog/post/522/Google-OAuth2-with-PicasaWeb.html
 https://console.developers.google.com/project/netzhansa/apiui/credential?authuser=0#
 https://accounts.google.com/o/oauth2/auth?scope=https://picasaweb.google.com/data/+https://www.googleapis.com/auth/userinfo.email&response_type=code&access_type=offline&redirect_uri=https://netzhansa.com/oauth2callback&approval_prompt=force&client_id=60990417096-kmhdpmjat3g8ip969klhvobphknotj7q.apps.googleusercontent.com
 
+### Misc helpful links
+https://stackoverflow.com/questions/3971841/how-to-resize-images-proportionally-keeping-the-aspect-ratio/14731922#14731922
 
 ## License
 
