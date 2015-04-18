@@ -34,3 +34,18 @@ def load(url):
 def flip():
     pygame.display.flip()
 
+token_file = os.path.expanduser("~/.phrame.token")
+
+def get_token():
+    try:
+        f = open(token_file, 'r')
+        token = f.read()
+        f.close()
+        return token
+    except:
+        return "UNKNOWN"
+
+def set_token(token):
+    f = open(token_file, 'w')
+    f.write(token)
+    f.close()
