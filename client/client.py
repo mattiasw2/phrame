@@ -25,6 +25,10 @@ def on_message(ws, message):
         handler = getattr(commands, command)
         try:
             handler(*args)
+            ws.send("ack")
+        except SystemExit:
+            ws.close()
+            pass
         except:
             print "message", message, "caused error:", sys.exc_info()[0]
     else:
@@ -32,6 +36,10 @@ def on_message(ws, message):
 
 def on_error(ws, message):
     print "websocket error:", message
+
+def on_close(ws):
+    print "websocket closed, exiting"
+    sys.exit(1)
 
 if len(sys.argv) < 2:
     print "missing URL argument"
@@ -42,6 +50,7 @@ url = sys.argv[1]
 ws = websocket.WebSocketApp(url,
                             on_error = on_error,
                             on_message = on_message,
-                            on_open = on_open)
+                            on_open = on_open,
+                            on_close = on_close)
 
 ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
