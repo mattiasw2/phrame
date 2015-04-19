@@ -61,11 +61,11 @@
           client))))
 
 (defn handle-client-command [channel command]
-  (let [argv (string/split command #"\s+")
+  (let [[command & args] (string/split command #"\s+")
         client (@clients channel)]
-    (if (= (first argv) "ack")
-      (>!! (:ack @client) command)
-      (apply send-off client client-command argv))))
+    (if (= command "ack")
+      (>!! (:ack @client) (first args))
+      (apply send-off client client-command command args))))
 
 (defn websocket-handler [request]
   (http-server/with-channel request channel
