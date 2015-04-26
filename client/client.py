@@ -25,7 +25,7 @@ def on_message(ws, message):
         handler = getattr(commands, command)
         try:
             handler(*args)
-            ws.send("ack")
+            ws.send("ack %s" % command)
         except SystemExit:
             ws.close()
             pass
