@@ -10,9 +10,6 @@
 
 (def config (edn/read-string (slurp (io/resource "config.edn"))))
 
-(defn load-user [username]
-  (edn/read-string (slurp (io/file (:token-directory config) username))))
-
 (defn refresh-token [token]
   (:body (http/post "https://www.googleapis.com/oauth2/v3/token"
                     {:query-params {:client_id (-> config :oauth-params :client-id)
