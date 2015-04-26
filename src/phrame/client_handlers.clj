@@ -1,5 +1,6 @@
 (ns phrame.client-handlers
   (:require [clojure.string :as string]
+            [clojure.core.async :as async :refer [>!! <!!]]
             [clj-time.core :as time]
             [org.httpkit.server :as http-server]
             [org.httpkit.timer :as timer]
@@ -15,7 +16,8 @@
 (defn send-client! [client & args]
   (let [command (string/join " " args)]
     (println "sending command" command)
-    (http-server/send! (:channel client) command)))
+    (http-server/send! (:channel client) command)
+    (<!! (:ack client))))
 
 (defn load-album [client]
   (let [{:keys [owner album]} (:phrame client)]
@@ -42,39 +44,40 @@
       (let [token (uuid)]
         (println "new phrame:" id)
         (storage/swap! assoc-in [:phrames id] {:token token})
-        (http-server/send! channel (str "set_token " token))
-        (http-server/send! channel "login accepted")
+        (send-client! client "set_token" token)
+        (send-client! client "login" "accepted")
         client)
 
       (:token phrame)
-      (do (http-server/send! channel "login accepted")
+      (do (send-client! client "login accepted")
           (println "phrame" id "logged in")
           (next-picture (assoc client :phrame phrame)))
 
       (do (if phrame
             (println "phrame" id "sent invalid token")
             (println "phrame" id "is unknown"))
-          (http-server/send! channel "login denied")
+          (send-client! client "login" "denied")
           (http-server/close channel)
           client))))
 
-(defmethod client-command "ack" [client _]
-  client)
-
-(defn handle-client-command [client command]
-  (println "client command" command)
-  (apply client-command client (string/split command #"\s+")))
+(defn handle-client-command [channel command]
+  (let [argv (string/split command #"\s+")
+        client (@clients channel)]
+    (if (= (first argv) "ack")
+      (>!! (:ack @client) command)
+      (apply send-off client client-command argv))))
 
 (defn websocket-handler [request]
   (http-server/with-channel request channel
     (println "connection established")
-    (swap! clients assoc channel (agent {:channel channel}))
+    (swap! clients assoc channel (agent {:channel channel
+                                         :ack (async/chan)}))
     (http-server/on-close channel
                           (fn [status]
                             (println "channel closed:" status)
                             (swap! clients dissoc channel)))
     (http-server/on-receive channel
-                            (partial send-off (@clients channel) handle-client-command))))
+                            (partial handle-client-command channel))))
 
 (def routes
   (compojure/routes

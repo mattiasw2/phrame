@@ -5,15 +5,19 @@ import time
 import os
 import sys
 import io
+import math
 from urllib2 import urlopen
 
 os.putenv('SDL_VIDEODRIVER', 'fbcon')
 
 pygame.display.init()
+
+pygame.mouse.set_visible(0)
 info = pygame.display.Info()
 screen_width = info.current_w
 screen_height = info.current_h
 screen_size = (info.current_w, info.current_h)
+screen_aspect = (float(screen_width) / screen_height)
 screen = pygame.display.set_mode(screen_size)
 
 def load(url):
@@ -23,12 +27,19 @@ def load(url):
 
     img = pygame.image.load(img_file)
     (img_width, img_height) = (img.get_width(), img.get_height())
-    ratio = min(float(screen_width) / img_width, float(screen_height) / img_height)
+    img_aspect = (float(img_width) / img_height)
+    ratio = 0
+    if math.copysign(1.0, screen_aspect - 1.0) == math.copysign(1.0, img_aspect - 1.0):
+        ratio = float(screen_height) / img_height
+    else:
+        ratio = float(screen_width) / img_width
+    x_offset = (screen_width - (img_width * ratio)) / 2
+    y_offset = (screen_height - (img_height * ratio)) / 2
     scaled_width = int(img_width * ratio)
     scaled_height = int(img_height * ratio)
     img = pygame.transform.scale(img, (scaled_width, scaled_height))
     screen.fill((0, 0, 0))
-    screen.blit(img, (screen_width / 2 - scaled_width / 2, screen_height / 2 - scaled_height / 2))
+    screen.blit(img, (x_offset, y_offset))
     print "done"
 
 def flip():

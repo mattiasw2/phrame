@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-import requests
 import websocket
 import logging
 import sys
