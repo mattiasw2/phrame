@@ -10,6 +10,8 @@ from urllib2 import urlopen
 os.putenv('SDL_VIDEODRIVER', 'fbcon')
 
 pygame.display.init()
+
+pygame.mouse.set_visible(0)
 info = pygame.display.Info()
 screen_width = info.current_w
 screen_height = info.current_h
