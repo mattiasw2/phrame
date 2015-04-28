@@ -7,13 +7,12 @@ import ssl
 import os
 
 import commands
-import system_id
 
 logging.basicConfig()
 
 def on_open(ws):
     print "connected, sending id"
-    ws.send("login %s %s" % (system_id.get(), commands.get_token()))
+    commands.do_login(ws)
 
 def on_message(ws, message):
     print "message:", message

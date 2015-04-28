@@ -7,6 +7,7 @@ import sys
 import io
 import math
 from urllib2 import urlopen
+import system_id
 
 os.putenv('SDL_VIDEODRIVER', 'fbcon')
 
@@ -19,6 +20,12 @@ screen_height = info.current_h
 screen_size = (info.current_w, info.current_h)
 screen_aspect = (float(screen_width) / screen_height)
 screen = pygame.display.set_mode(screen_size)
+
+ws = None
+
+def do_login(ws_):
+    ws = ws_
+    ws.send("login %s %s" % (system_id.get(), get_token()))
 
 def load(url):
     print "loading ", url
