@@ -22,6 +22,8 @@ screen_size = (info.current_w, info.current_h)
 screen_aspect = (float(screen_width) / screen_height)
 screen = pygame.display.set_mode(screen_size)
 
+print "screen size: %d/%d" % (screen_width, screen_height)
+
 ws = None
 
 def do_login(ws_):
