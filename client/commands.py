@@ -78,7 +78,7 @@ token_file = os.path.expanduser("~/.phrame.token")
 def get_token():
     try:
         f = open(token_file, 'r')
-        token = f.read()
+        token = f.read().rstrip()
         f.close()
         return token
     except:
