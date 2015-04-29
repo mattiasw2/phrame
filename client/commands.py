@@ -29,7 +29,7 @@ def do_login(ws_):
     ws.send("login %s" % (json.dumps({'id': system_id.get(),
                                       'token': get_token(),
                                       'screen': {'width': screen_width,
-                                                 'height': screen_height}})))))
+                                                 'height': screen_height}})))
 
 def load(url):
     print "loading ", url
