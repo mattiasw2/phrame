@@ -7,6 +7,7 @@
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/data.xml "0.0.8"]
                  [org.clojure/data.zip "0.1.1"]
+                 [org.clojure/data.json "0.2.6"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [clj-time "0.9.0"]
                  [clj-http "1.1.0"]

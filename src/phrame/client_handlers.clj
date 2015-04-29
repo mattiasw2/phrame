@@ -1,5 +1,6 @@
 (ns phrame.client-handlers
   (:require [clojure.string :as string]
+            [clojure.data.json :as json]
             [clojure.core.async :as async :refer [>!! <!!]]
             [clj-time.core :as time]
             [org.httpkit.server :as http-server]
@@ -33,12 +34,10 @@
                            (send-off agent next-picture)))
     (assoc client :playlist more-pictures)))
 
-(defmulti client-command (fn [client command & args] command))
-
-(defmethod client-command "login" [client _ id token]
+(defn client-login [client {:keys [id token screen]}]
   (let [phrame (get-in @storage/data [:phrames id])
         channel (:channel client)]
-    (println "token:" token "expected:" (:token phrame))
+    (println "token:" token "expected:" (:token phrame) "screen:" screen)
     (condp = token
       "UNKNOWN"
       (let [token (uuid)]
@@ -60,12 +59,12 @@
           (http-server/close channel)
           client))))
 
-(defn handle-client-command [channel command]
-  (let [[command & args] (string/split command #"\s+")
+(defn handle-client-message [channel command]
+  (let [[command & arg] (string/split command #"\s+" 2)
         client (@clients channel)]
-    (if (= command "ack")
-      (>!! (:ack @client) (first args))
-      (apply send-off client client-command command args))))
+    (condp command =
+      "ack" (>!! (:ack @client) arg)
+      "login" (send-off client client-login command (json/read-str arg)))))
 
 (defn websocket-handler [request]
   (http-server/with-channel request channel
@@ -77,9 +76,8 @@
                             (println "channel closed:" status)
                             (swap! clients dissoc channel)))
     (http-server/on-receive channel
-                            (partial handle-client-command channel))))
+                            (partial handle-client-message channel))))
 
 (def routes
   (compojure/routes
-   (GET "/websocket" []
-        websocket-handler)))
+   (GET "/websocket" [] websocket-handler)))

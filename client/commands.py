@@ -8,6 +8,7 @@ import io
 import math
 from urllib2 import urlopen
 import system_id
+import json
 
 os.putenv('SDL_VIDEODRIVER', 'fbcon')
 
@@ -25,7 +26,10 @@ ws = None
 
 def do_login(ws_):
     ws = ws_
-    ws.send("login %s %s" % (system_id.get(), get_token()))
+    ws.send("login %s" % (json.dumps({'id': system_id.get(),
+                                      'token': get_token(),
+                                      'screen': {'width': screen_width,
+                                                 'height': screen_height}})))))
 
 def load(url):
     print "loading ", url
