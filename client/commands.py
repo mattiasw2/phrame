@@ -34,13 +34,13 @@ def do_login(ws_):
                                                  'height': screen_height}})))
 
 def load(url):
-    print "loading ", url
     img_str = urlopen(url).read()
     img_file = io.BytesIO(img_str)
 
     img = pygame.image.load(img_file)
     (img_width, img_height) = (img.get_width(), img.get_height())
     img_aspect = (float(img_width) / img_height)
+    print "image size: %d/%d" % (img_width, img_height)
     ratio = 0
     if math.copysign(1.0, screen_aspect - 1.0) == math.copysign(1.0, img_aspect - 1.0):
         if screen_aspect > 1:
@@ -54,7 +54,6 @@ def load(url):
             ratio = float(screen_height) / img_height
     x_offset = (screen_width - (img_width * ratio)) / 2
     y_offset = (screen_height - (img_height * ratio)) / 2
-    print "ratio %.3f x_offset %d y_offset %d" % (ratio, x_offset, y_offset)
     scaled_width = int(img_width * ratio)
     scaled_height = int(img_height * ratio)
     img = pygame.transform.scale(img, (scaled_width, scaled_height))
