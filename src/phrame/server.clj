@@ -2,6 +2,7 @@
   (:require [org.httpkit.server :as http-server]
             [compojure.core :as compojure]
             [phrame.config :refer [config]]
+            [compojure.route :as route]
             [phrame.client-handlers]
             [phrame.oauth-handlers]))
 
@@ -9,7 +10,9 @@
 
 (def handler
   (compojure/routes phrame.client-handlers/routes
-                    phrame.oauth-handlers/routes))
+                    phrame.oauth-handlers/routes
+                    (route/resources "/")
+                    (route/not-found "Page not found")))
 
 (defn start-server []
   (when @server
