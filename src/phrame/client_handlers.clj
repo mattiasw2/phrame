@@ -21,8 +21,12 @@
     (<!! (:ack client))))
 
 (defn load-album [client]
-  (let [{:keys [owner album]} (:phrame client)]
-    (shuffle (picasa-web-albums/get-images owner album))))
+  (let [{:keys [owner album]} (:phrame client)
+        {:keys [aspect-ratio]} (:screen client)
+        matching-ratio? (if (pos? (- aspect-ratio 1)) pos? neg?)]
+    (shuffle (filter (fn [{:keys [width height]}]
+                       (matching-ratio? (- (/ width height) 1)))
+                     (picasa-web-albums/get-images owner album)))))
 
 (defn next-picture [client]
   (let [[picture & more-pictures] (or (:playlist client)
@@ -33,6 +37,11 @@
       (timer/schedule-task 10000
                            (send-off agent next-picture)))
     (assoc client :playlist more-pictures)))
+
+(defn make-screen-spec [{:keys [width height]}]
+  {:width width
+   :height height
+   :aspect-ratio (/ width height)})
 
 (defn client-login [client {:keys [id token screen]}]
   (let [phrame (get-in @storage/data [:phrames id])
@@ -50,7 +59,9 @@
       (:token phrame)
       (do (send-client! client "login accepted")
           (println "phrame" id "logged in")
-          (next-picture (assoc client :phrame phrame)))
+          (next-picture (assoc client
+                               :phrame phrame
+                               :screen (make-screen-spec screen))))
 
       (do (if phrame
             (println "phrame" id "sent invalid token")
@@ -60,11 +71,12 @@
           client))))
 
 (defn handle-client-message [channel command]
-  (let [[command & arg] (string/split command #"\s+" 2)
+  (let [[command arg] (string/split command #"\s+" 2)
         client (@clients channel)]
-    (condp command =
+    (condp = command
       "ack" (>!! (:ack @client) arg)
-      "login" (send-off client client-login command (json/read-str arg)))))
+      "login" (send-off client client-login (json/read-str arg :key-fn keyword))
+      (println "command not matched"))))
 
 (defn websocket-handler [request]
   (http-server/with-channel request channel
