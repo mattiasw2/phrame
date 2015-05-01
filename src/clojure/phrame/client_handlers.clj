@@ -48,6 +48,12 @@
         channel (:channel client)]
     (println "token:" token "expected:" (:token phrame) "screen:" screen)
     (condp = token
+      nil
+      (do (println "no token sent")
+          (send-client! client "login" "denied")
+          (http-server/close channel)
+          client)
+
       "UNKNOWN"
       (let [token (uuid)]
         (println "new phrame:" id)

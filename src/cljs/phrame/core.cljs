@@ -17,7 +17,7 @@
 (defonce app-state (atom {:text "Hello world!"}))
 
 (go
-  (let [{:keys [ws-channel error]} (<! (ws-ch "ws://localhost:3449/websocket" {:format :str}))]
+  (let [{:keys [ws-channel error]} (<! (ws-ch (str "ws://" (.-host (.-location js/window)) "/websocket") {:format :str}))]
     (if-not error
       (>! ws-channel "login {}")
       (js/console.log "Error:" (pr-str error)))
