@@ -4,13 +4,15 @@
             [phrame.config :refer [config]]
             [compojure.route :as route]
             [phrame.client-handlers]
-            [phrame.oauth-handlers]))
+            [phrame.oauth-handlers]
+            [phrame.api-handlers]))
 
 (defonce server (atom nil))
 
 (def handler
   (compojure/routes phrame.client-handlers/routes
                     phrame.oauth-handlers/routes
+                    phrame.api-handlers/routes
                     (route/resources "/")
                     (route/not-found "Page not found")))
 
