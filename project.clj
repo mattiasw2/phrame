@@ -24,6 +24,7 @@
                  [alandipert/enduro "1.2.0"]
 
                  ;; ClojureScript dependencies
+                 [jarohen/chord "0.6.0"]
                  [org.clojure/clojurescript "0.0-2850"]
                  [org.omcljs/om "0.8.8"]
                  [racehub/om-bootstrap "0.5.0"]]

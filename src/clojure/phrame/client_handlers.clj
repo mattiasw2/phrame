@@ -70,13 +70,13 @@
           (http-server/close channel)
           client))))
 
-(defn handle-client-message [channel command]
-  (let [[command arg] (string/split command #"\s+" 2)
+(defn handle-client-message [channel message]
+  (let [[command arg] (string/split message #"\s+" 2)
         client (@clients channel)]
     (condp = command
       "ack" (>!! (:ack @client) arg)
       "login" (send-off client client-login (json/read-str arg :key-fn keyword))
-      (println "command not matched"))))
+      (println "command " command " not matched:" message))))
 
 (defn websocket-handler [request]
   (http-server/with-channel request channel

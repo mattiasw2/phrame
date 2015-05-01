@@ -1,17 +1,28 @@
 (ns ^:figwheel-always phrame.core
+    (:require-macros [cljs.core.async.macros :as asyncm :refer (go go-loop)])
     (:require [om.core :as om :include-macros true]
               [om-tools.dom :as d :include-macros true]
               [om-bootstrap.button :as b]
               [om-bootstrap.nav :as n]
               [om-bootstrap.random :as r]
               [om-bootstrap.input :as i]
-              [om-bootstrap.table :refer [table]]))
+              [om-bootstrap.table :refer [table]]
+              [chord.client :refer [ws-ch]]
+              [cljs.core.async :as async :refer (<! >! put! chan)]))
 
 (enable-console-print!)
 
 ;; define your app data so that it doesn't get over-written on reload
 
-(defonce app-state (atom {:text "Hello world MUHAHA!"}))
+(defonce app-state (atom {:text "Hello world!"}))
+
+(go
+  (let [{:keys [ws-channel error]} (<! (ws-ch "ws://localhost:3449/websocket" {:format :str}))]
+    (if-not error
+      (>! ws-channel "login {}")
+      (js/console.log "Error:" (pr-str error)))
+    (let [{:keys [message]} (<! ws-channel)]
+      (js/console.log "Got message from server:" (pr-str message)))))
 
 (defn navbar []
   (n/navbar
