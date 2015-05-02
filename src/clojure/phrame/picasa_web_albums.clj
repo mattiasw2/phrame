@@ -85,6 +85,7 @@
                :url jpeg-link}))
 
 (defn get-images [user album]
+  (assert user album)
   (map make-photo (xml-> (api-get user
                                   (str "https://picasaweb.google.com/data/feed/api/user/default/albumid/"
                                        (:id album))
