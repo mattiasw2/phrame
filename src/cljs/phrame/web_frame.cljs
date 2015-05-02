@@ -11,7 +11,7 @@
 
 (defn ensure-client-id []
   (or (:client-id @login-data)
-      (swap! login-data assoc :client-id (str (uuid/make-random-uuid)))))
+      (:client-id (swap! login-data assoc :client-id (str "web:" (uuid/make-random-uuid))))))
 
 (defn make-websocket-url [url]
   (str "ws://" (.-host (.-location js/window)) url))
@@ -30,25 +30,24 @@
 (defn handle-commands [server-chan stop-chan]
   (go-loop [[message chan] (alts! [server-chan stop-chan])]
     (if (= chan server-chan)
-      (let [{:keys [message]} message]
+      (do
         (utils/say "Got message from server: " (pr-str message))
-        (apply execute (string/split message #"\s+"))
-        (>! server-chan (str "ack " message))
-        (recur (alts! [server-chan stop-chan]))))
-    (utils/say "server stopped")))
+        (let [{:keys [message]} message]
+          (when message
+            (apply execute (string/split message #"\s+"))
+            (>! server-chan (str "ack " message))
+            (recur (alts! [server-chan stop-chan])))))
+      (utils/say "server stopped"))))
 
 (defn start []
   (utils/say "starting server")
   (let [stop-chan (chan)]
     (go
       (let [channel-info (<! (ws-ch (make-websocket-url "/websocket") {:format :str}))]
-        (utils/say "got websocket")
         (if-let [error (:error channel-info)]
           (utils/say "Error: " (pr-str error))
           (let [server-chan (:ws-channel channel-info)]
-            (utils/say "logging in")
             (>! server-chan (str "login " (utils/to-json-string {:id (ensure-client-id)
                                                                  :token (or (:token @login-data "UNKNOWN"))})))
-            (utils/say "going into command handler loop")
             (handle-commands server-chan stop-chan)))))
     stop-chan))

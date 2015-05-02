@@ -23,7 +23,9 @@
 (defn load-album [client]
   (let [{:keys [owner album]} (:phrame client)
         {:keys [aspect-ratio]} (:screen client)
-        matching-ratio? (if (pos? (- aspect-ratio 1)) pos? neg?)]
+        matching-ratio? (if aspect-ratio
+                          (if (pos? (- aspect-ratio 1)) pos? neg?)
+                          identity)]
     (shuffle (filter (fn [{:keys [width height]}]
                        (matching-ratio? (- (/ width height) 1)))
                      (picasa-web-albums/get-images owner album)))))
@@ -39,9 +41,10 @@
     (assoc client :playlist more-pictures)))
 
 (defn make-screen-spec [{:keys [width height]}]
-  {:width width
-   :height height
-   :aspect-ratio (/ width height)})
+  (when (and width height)
+    {:width width
+     :height height
+     :aspect-ratio (/ width height)}))
 
 (defn client-login [client {:keys [id token screen]}]
   (let [phrame (get-in @storage/data [:phrames id])
