@@ -27,7 +27,9 @@
                  [jarohen/chord "0.6.0"]
                  [org.clojure/clojurescript "0.0-2850"]
                  [org.omcljs/om "0.8.8"]
-                 [racehub/om-bootstrap "0.5.0"]]
+                 [racehub/om-bootstrap "0.5.0"]
+                 [alandipert/storage-atom "1.2.4"]
+                 [com.lucasbradstreet/cljs-uuid-utils "1.0.1"]]
 
   :plugins [[lein-cljsbuild "1.0.4"]
             [lein-figwheel "0.2.5-SNAPSHOT"]]
