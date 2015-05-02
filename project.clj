@@ -39,20 +39,36 @@
   :source-paths ["src/clojure"]
 
   :cljsbuild {
-              :builds [{:id "dev"
+              :builds [{:id "web-frame-dev"
                         :source-paths ["src/cljs" "dev_src"]
-                        :compiler {:output-to "resources/public/js/compiled/phrame.js"
-                                   :output-dir "resources/public/js/compiled/out"
+                        :compiler {:output-to "resources/public/js/compiled/web-frame.js"
+                                   :output-dir "resources/public/js/compiled/out-web-frame"
                                    :optimizations :none
-                                   :main phrame.dev
-                                   :asset-path "js/compiled/out"
+                                   :main phrame.web-frame-dev
+                                   :asset-path "js/compiled/out-web-frame"
                                    :source-map true
                                    :source-map-timestamp true
                                    :cache-analysis true }}
-                       {:id "min"
+                       {:id "web-frame-min"
+                        :source-paths ["src/cljs"]
+                        :compiler {:output-to "resources/public/js/compiled/web-frame.js"
+                                   :main phrame.web-frame
+                                   :optimizations :advanced
+                                   :pretty-print false}}
+                       {:id "cms-dev"
+                        :source-paths ["src/cljs" "dev_src"]
+                        :compiler {:output-to "resources/public/js/compiled/cms.js"
+                                   :output-dir "resources/public/js/compiled/out-cms"
+                                   :optimizations :none
+                                   :main phrame.cms-dev
+                                   :asset-path "js/compiled/out-cms"
+                                   :source-map true
+                                   :source-map-timestamp true
+                                   :cache-analysis true }}
+                       {:id "cms-min"
                         :source-paths ["src/cljs"]
                         :compiler {:output-to "resources/public/js/compiled/phrame.js"
-                                   :main phrame.core                         
+                                   :main phrame.cms
                                    :optimizations :advanced
                                    :pretty-print false}}]}
 

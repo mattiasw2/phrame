@@ -24,6 +24,11 @@
 (defmethod execute "login" [_ status]
   (utils/say "login status: " status))
 
+(defmethod execute "load" [_ url]
+  (utils/say "load " url ", old image src: " (.getAttribute (.getElementById js/document "image") "src"))
+  (.setAttribute (.getElementById js/document "image") "src" url)
+  (utils/say "done"))
+
 (defmethod execute :default [command & args]
   (utils/say "unknown command: " command))
 
@@ -51,3 +56,5 @@
                                                                  :token (or (:token @login-data "UNKNOWN"))})))
             (handle-commands server-chan stop-chan)))))
     stop-chan))
+
+(defonce frame (start))
