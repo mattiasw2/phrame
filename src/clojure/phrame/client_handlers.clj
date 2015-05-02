@@ -36,7 +36,7 @@
     (send-client! client "load" (:url picture))
     (send-client! client "flip")
     (let [agent *agent*]
-      (timer/schedule-task 10000
+      (timer/schedule-task 30000
                            (send-off agent next-picture)))
     (assoc client :playlist more-pictures)))
 
