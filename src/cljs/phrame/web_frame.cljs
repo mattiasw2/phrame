@@ -24,8 +24,10 @@
 (defmethod execute "login" [_ status]
   (utils/say "login status: " status))
 
+(defmethod execute "flip" [_]
+  (utils/say "flip is not yet implemented"))
+
 (defmethod execute "load" [_ url]
-  (utils/say "load " url ", old image src: " (.getAttribute (.getElementById js/document "image") "src"))
   (.setAttribute (.getElementById js/document "image") "src" url)
   (utils/say "done"))
 
@@ -53,7 +55,9 @@
           (utils/say "Error: " (pr-str error))
           (let [server-chan (:ws-channel channel-info)]
             (>! server-chan (str "login " (utils/to-json-string {:id (ensure-client-id)
-                                                                 :token (or (:token @login-data "UNKNOWN"))})))
+                                                                 :token (or (:token @login-data "UNKNOWN"))
+                                                                 :screen {:width (.-width js/screen)
+                                                                          :height (.-height js/screen)}})))
             (handle-commands server-chan stop-chan)))))
     stop-chan))
 

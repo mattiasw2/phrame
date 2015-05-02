@@ -20,15 +20,21 @@
     (http-server/send! (:channel client) command)
     (<!! (:ack client))))
 
+(defn get-imgmax [width]
+  (or (and (number? width)
+           (first (drop-while (partial > width)
+                              [94 110 128 200 220 288 320 400 512 576 640 720 800 912 1024 1152 1280 1440 1600])))
+      "d"))
+
 (defn load-album [client]
   (let [{:keys [owner album]} (:phrame client)
-        {:keys [aspect-ratio]} (:screen client)
+        {:keys [aspect-ratio width]} (:screen client)
         matching-ratio? (if aspect-ratio
                           (if (pos? (- aspect-ratio 1)) pos? neg?)
                           identity)]
     (shuffle (filter (fn [{:keys [width height]}]
                        (matching-ratio? (- (/ width height) 1)))
-                     (picasa-web-albums/get-images owner album)))))
+                     (picasa-web-albums/get-images owner album :imgmax (get-imgmax width))))))
 
 (defn next-picture [client]
   (let [[picture & more-pictures] (or (:playlist client)
