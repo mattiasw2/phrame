@@ -16,8 +16,11 @@
 
 (defonce app-state (atom {:text "Hello world!"}))
 
+(defn make-websocket-url [url]
+  (str "ws://" (.-host (.-location js/window)) url))
+
 (go
-  (let [{:keys [ws-channel error]} (<! (ws-ch (str "ws://" (.-host (.-location js/window)) "/websocket") {:format :str}))]
+  (let [{:keys [ws-channel error]} (<! (ws-ch (make-websocket-url "/websocket") {:format :str}))]
     (if-not error
       (>! ws-channel "login {}")
       (js/console.log "Error:" (pr-str error)))
