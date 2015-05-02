@@ -27,18 +27,28 @@
 (defmethod execute :default [command & args]
   (utils/say "unknown command: " command))
 
+(defn handle-commands [server-chan stop-chan]
+  (go-loop [[message chan] (alts! [server-chan stop-chan])]
+    (if (= chan server-chan)
+      (let [{:keys [message]} message]
+        (utils/say "Got message from server: " (pr-str message))
+        (apply execute (string/split message #"\s+"))
+        (>! server-chan (str "ack " message))
+        (recur (alts! [server-chan stop-chan]))))
+    (utils/say "server stopped")))
+
 (defn start []
+  (utils/say "starting server")
   (let [stop-chan (chan)]
     (go
-      (let [{:keys [ws-channel error]} (<! (ws-ch (make-websocket-url "/websocket") {:format :str}))]
-        (if-not error
-          (do
-            (>! ws-channel (str "login " (utils/to-json-string {:id (ensure-client-id)
-                                                                :token (or (:token @login-data "UNKNOWN"))})))
-            (go-loop [{:keys [message]} (<! ws-channel)]
-              (utils/say "Got message from server: " (pr-str message))
-              (apply execute (string/split message #"\s+"))
-              (>! ws-channel (str "ack " message))
-              (recur (<! ws-channel))))
-          (utils/say "Error: " (pr-str error)))))
+      (let [channel-info (<! (ws-ch (make-websocket-url "/websocket") {:format :str}))]
+        (utils/say "got websocket")
+        (if-let [error (:error channel-info)]
+          (utils/say "Error: " (pr-str error))
+          (let [server-chan (:ws-channel channel-info)]
+            (utils/say "logging in")
+            (>! server-chan (str "login " (utils/to-json-string {:id (ensure-client-id)
+                                                                 :token (or (:token @login-data "UNKNOWN"))})))
+            (utils/say "going into command handler loop")
+            (handle-commands server-chan stop-chan)))))
     stop-chan))
