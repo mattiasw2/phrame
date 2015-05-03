@@ -80,7 +80,8 @@
       (d/img #js {:src (:current-image state)
                   :onClick #(.webkitRequestFullScreen (.getElementById js/document "image"))}))))
 
-(om/root image-view
-         app-state
-         {:target (.getElementById js/document "image")})
+(when (.getElementById js/document "image")
+  (om/root image-view
+           app-state
+           {:target (.getElementById js/document "image")}))
 
