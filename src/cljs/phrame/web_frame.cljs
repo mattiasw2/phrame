@@ -27,10 +27,10 @@
   (utils/say "login status: " status))
 
 (defmethod execute "flip" [owner _]
-  (utils/say "flip is not yet implemented"))
+  (om/set-state! owner :current-image (om/get-state owner :next-image)))
 
 (defmethod execute "load" [owner _ url]
-  (om/set-state! owner :current-image url))
+  (om/set-state! owner :next-image url))
 
 (defmethod execute :default [owner command & args]
   (utils/say "unknown command: " command))
@@ -46,7 +46,7 @@
               (apply execute owner (string/split message #"\s+"))
               (>! server-chan (str "ack " message))
               (recur (alts! [server-chan stop-chan])))))
-        (utils/say "server stopped")))))
+        (utils/say "stopped listening for server events")))))
 
 (defn serve-connection [owner]
   (utils/say "establishing connection to server")
@@ -72,6 +72,9 @@
     om/IWillMount
     (will-mount [_]
       (serve-connection owner))
+    om/IWillUnmount
+    (will-unmount [_]
+      (>! (om/get-state owner :stop-connection) "stop"))
     om/IRenderState
     (render-state [_ state]
       (d/img #js {:src (:current-image state)
@@ -79,5 +82,5 @@
 
 (om/root image-view
          app-state
-         {:target (. js/document (getElementById "image"))})
+         {:target (.getElementById js/document "image")})
 
