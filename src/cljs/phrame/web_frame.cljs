@@ -1,7 +1,7 @@
 (ns ^:figwheel-always phrame.web-frame
     (:require-macros [cljs.core.async.macros :as asyncm :refer [go go-loop]])
     (:require [clojure.string :as string]
-              [cljs.core.async :as async :refer (<! >! alts! chan)]
+              [cljs.core.async :as async :refer (<! >! put! alts! chan)]
               [om.core :as om :include-macros true]
               [om-tools.dom :as d :include-macros true]
               [chord.client :refer [ws-ch]]
@@ -18,33 +18,43 @@
 (defn make-websocket-url [url]
   (str "ws://" (.-host (.-location js/window)) url))
 
-(defmulti execute (fn [owner command & args] command))
+(defn send-ack! [server-chan command]
+  (put! server-chan (str "ack " command)))
 
-(defmethod execute "set_token" [owner _ token]
-  (swap! login-data assoc :token token))
+(defmulti execute (fn [server-chan owner command & args] command))
 
-(defmethod execute "login" [owner _ status]
-  (utils/say "login status: " status))
+(defmethod execute "set_token" [server-chan owner command token]
+  (swap! login-data assoc :token token)
+  (send-ack! server-chan command))
 
-(defmethod execute "flip" [owner _]
-  (om/set-state! owner :current-image (om/get-state owner :next-image)))
+(defmethod execute "login" [server-chan owner command status]
+  (utils/say "login status: " status)
+  (send-ack! server-chan command))
 
-(defmethod execute "load" [owner _ url]
+(defmethod execute "flip" [server-chan owner command]
+  (om/set-state! owner :current-image (om/get-state owner :next-image))
+  (send-ack! server-chan command))
+
+(defmethod execute "load" [server-chan owner command url]
+  (let [preload-img (.createElement js/document "img")]
+    (.setAttribute preload-img "src" url)
+    (if (.-complete preload-img)
+      (send-ack! server-chan command)
+      (.addEventListener preload-img "load" #(send-ack! server-chan command))))
   (om/set-state! owner :next-image url))
 
 (defmethod execute :default [owner command & args]
   (utils/say "unknown command: " command))
 
 (defn handle-commands [server-chan owner]
-  (let [stop-chan (om/get-state owner :stop-connection)]
+  (let [stop-chan (om/get-state owner :close-connection)]
     (go-loop [[message chan] (alts! [server-chan stop-chan])]
       (if (= chan server-chan)
         (do
           (utils/say "Got message from server: " (pr-str message))
           (let [{:keys [message]} message]
             (when message
-              (apply execute owner (string/split message #"\s+"))
-              (>! server-chan (str "ack " message))
+              (apply execute server-chan owner (string/split message #"\s+"))
               (recur (alts! [server-chan stop-chan])))))
         (utils/say "stopped listening for server events")))))
 
@@ -67,7 +77,7 @@
   (reify
     om/IInitState
     (init-state [_]
-      {:stop-connection (chan)
+      {:close-connection (chan)
        :current-image "img/matrix.gif"})
     om/IWillMount
     (will-mount [_]
