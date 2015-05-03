@@ -32,6 +32,7 @@
                (d/img {:id "image"
                        :src "img/matrix.gif"}))))))
 
-(om/root main-view
-         app-state
-         {:target (. js/document (getElementById "app"))})
+(when (.getElementById js/document "app")
+  (om/root main-view
+           app-state
+           {:target (.getElementById js/document "app")}))
