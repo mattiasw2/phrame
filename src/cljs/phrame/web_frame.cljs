@@ -36,6 +36,10 @@
   (send-ack! server-chan command))
 
 (defmethod execute "load" [server-chan owner command url]
+  ;; Preload the image by creating an (invisible) img DOM element with
+  ;; the given source URL.  The browser will load the image so that
+  ;; when "flip" is called to actually display the image through om,
+  ;; it will be in the browser's cache.
   (let [preload-img (.createElement js/document "img")]
     (.setAttribute preload-img "src" url)
     (if (.-complete preload-img)
