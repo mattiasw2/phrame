@@ -74,7 +74,7 @@
       (serve-connection owner))
     om/IWillUnmount
     (will-unmount [_]
-      (>! (om/get-state owner :stop-connection) "stop"))
+      (put! (om/get-state owner :close-connection) "stop"))
     om/IRenderState
     (render-state [_ state]
       (d/img #js {:src (:current-image state)
