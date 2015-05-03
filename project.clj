@@ -48,7 +48,7 @@
                                    :asset-path "js/compiled/out-web-frame"
                                    :source-map true
                                    :source-map-timestamp true
-                                   :cache-analysis true }}
+                                   :cache-analysis true}}
                        {:id "web-frame-min"
                         :source-paths ["src/cljs"]
                         :compiler {:output-to "resources/public/js/compiled/web-frame.js"
@@ -64,7 +64,7 @@
                                    :asset-path "js/compiled/out-cms"
                                    :source-map true
                                    :source-map-timestamp true
-                                   :cache-analysis true }}
+                                   :cache-analysis true}}
                        {:id "cms-min"
                         :source-paths ["src/cljs"]
                         :compiler {:output-to "resources/public/js/compiled/phrame.js"
