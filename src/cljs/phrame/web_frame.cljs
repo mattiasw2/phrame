@@ -74,8 +74,10 @@
       (serve-connection owner))
     om/IRenderState
     (render-state [_ state]
-      (d/img {:src (:current-image state)}))))
+      (d/img #js {:src (:current-image state)
+                  :onClick #(.webkitRequestFullScreen (.getElementById js/document "image"))}))))
 
 (om/root image-view
          app-state
          {:target (. js/document (getElementById "image"))})
+
