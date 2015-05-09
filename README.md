@@ -4,6 +4,7 @@ Software to run on Raspberry Pi based photo frame.
 
 ## Client install
 
+    $ sudo apt-get install -y python-pip
     $ sudo pip install websocket-client
 
 ## Links
@@ -25,6 +26,9 @@ https://accounts.google.com/o/oauth2/auth?scope=https://picasaweb.google.com/dat
 
 ### Misc helpful links
 https://stackoverflow.com/questions/3971841/how-to-resize-images-proportionally-keeping-the-aspect-ratio/14731922#14731922
+
+### Datomic & Clojure related
+https://github.com/cldwalker/datomic-free
 
 ## License
 
