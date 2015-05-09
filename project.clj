@@ -23,6 +23,8 @@
                  [compojure "1.3.3"]
                  [org.apache.httpcomponents/httpclient "4.3.5"]
                  [alandipert/enduro "1.2.0"]
+                 [com.datomic/datomic-free "0.9.5153"]
+                 [im.chit/adi "0.3.1-SNAPSHOT"]
 
                  ;; ClojureScript dependencies
                  [jarohen/chord "0.6.0"]
