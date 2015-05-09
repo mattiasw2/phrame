@@ -84,9 +84,12 @@
                :size [:gphoto:size parse-integer]
                :url jpeg-link}))
 
-(defn get-images [user album]
+(defn get-images [user album
+                  & {:keys [imgmax] :or {imgmax "d"}}]
+  (assert user)
+  (assert album)
   (map make-photo (xml-> (api-get user
                                   (str "https://picasaweb.google.com/data/feed/api/user/default/albumid/"
                                        (:id album))
-                                  {"imgmax" "d"})
+                                  {"imgmax" imgmax})
                          :entry)))
