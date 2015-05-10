@@ -1,5 +1,6 @@
 (ns phrame.picasa-web-albums
   (:require [clojure.edn :as edn]
+            [clojure.set :as set]
             [clojure.java.io :as io]
             [clojure.instant :as instant]
             [clojure.xml :as xml]
@@ -18,8 +19,8 @@
                                     :grant_type "refresh_token"}
                      :as :json})))
 
-(defn access-token [email]
-  (:access_token (refresh-token (:refresh-token (get-in @storage/data [:users email])))))
+(defn access-token [user]
+  (:access_token (refresh-token (:google-refresh-token user))))
 
 (defn xml-zip-string [string]
   (-> string
@@ -45,7 +46,7 @@
     [x]))
 
 (defn parse-integer [s]
-  (Integer/parseInt s))
+  (Long/parseLong s))
 
 (defn xml-to-map [xml key->element]
   (reduce (fn [result [key parser]]
@@ -61,35 +62,60 @@
 (defn make-album [xml]
   (xml-to-map xml
               {:title :title
-               :id :gphoto:id
-               :url :id}))
+               :picasa-id [:gphoto:id parse-integer]
+               :url :id
+               :updated [:updated instant/read-instant-timestamp]}))
 
 (defn get-albums [user]
   (map make-album (xml-> (api-get user "https://picasaweb.google.com/data/feed/api/user/default")
                          :entry)))
 
-(defn jpeg-link [xml]
+(defn jpeg-link [which xml]
   (xml1-> xml
           :media:group
-          :media:content
+          which
           (zip-xml/attr :url)))
 
 (defn make-photo [xml]
   (xml-to-map xml
-              {:published [:published instant/read-instant-timestamp]
+              {:picasa-id [:gphoto:id parse-integer]
+               :published [:published instant/read-instant-timestamp]
                :updated [:updated instant/read-instant-timestamp]
                :title :title
                :width [:gphoto:width parse-integer]
                :height [:gphoto:height parse-integer]
                :size [:gphoto:size parse-integer]
-               :url jpeg-link}))
+               :url (partial jpeg-link :media:content)
+               :thumbnail-url (partial jpeg-link :media:thumbnail)}))
 
 (defn get-images [user album
-                  & {:keys [imgmax] :or {imgmax "d"}}]
+                  & {:keys [imgmax thumbsize] :or {imgmax "d" thumbsize 200}}]
   (assert user)
   (assert album)
   (map make-photo (xml-> (api-get user
                                   (str "https://picasaweb.google.com/data/feed/api/user/default/albumid/"
                                        (:id album))
-                                  {"imgmax" imgmax})
+                                  {"imgmax" imgmax
+                                   "thumbsize" thumbsize})
                          :entry)))
+
+(defn map-by [key coll]
+  (into {} (map (fn [element] [(key element) element]) coll)))
+
+(defn new-picasa-album [user album]
+  (println (:picasa-id album) "new picasa album"))
+
+(defn synchronize-albums [user]
+  (let [storage-albums (map-by :picasa-id (:albums user))
+        picasa-albums (map-by :picasa-id (get-albums user))
+        all-album-ids (set/union (keys storage-albums) (keys picasa-albums))]
+    (doseq [album-id all-album-ids]
+      (cond
+        (not (storage-albums album-id))
+        (new-picasa-album user (picasa-albums album-id))
+
+        (not (picasa-albums album-id))
+        (println album-id "deleted from picasa" album-id)
+
+        (not (= (:updated storage-albums) (:updated picasa-albums)))
+        (println album-id "updated in picasa")))))
