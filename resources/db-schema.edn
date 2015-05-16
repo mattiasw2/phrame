@@ -1,0 +1,37 @@
+(defentity picasa-album
+  (updated :instant "")
+  (images :ref "")
+  (picasa-id :long ""
+             :unique :value)
+  (title :string "")
+  (url :string ""))
+
+(defentity impression
+  (frame :ref "")
+  (when :instant "")
+  (image :ref ""))
+
+(defentity frame
+  (key :string "" :unique :value)
+  (feed :ref "")
+  (name :string "")
+  (token :string "")
+  (owner :ref ""))
+
+(defentity image
+  (updated :instant "")
+  (width :long "")
+  (thumbnail-url :string "")
+  (picasa-id :long ""
+             :unique :value)
+  (size :long "")
+  (title :string "")
+  (url :string "")
+  (published :instant "")
+  (height :long ""))
+
+(defentity user
+  (email :string "" :unique :value)
+  (password :string "")
+  (albums :ref "")
+  (google-refresh-token :string ""))
