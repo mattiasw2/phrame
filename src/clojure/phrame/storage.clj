@@ -35,11 +35,13 @@
                                   :where [?e :frame/key ?key]]
                                 (datomic/db (conn)))))
 
-(defn get-frame [key]
+(defn get-frame [key updates]
   (get-entity :frame/key key))
 
 (defn update-frame [key updates]
-  (get-frame key))
+  (datomic/assert! (conn)
+                   (merge (get-frame key)
+                          updates)))
 
 (defn get-users []
   (datomic/select-entities '[:find [?e]
@@ -50,5 +52,7 @@
   (get-entity :user/email email))
 
 (defn update-user [email updates]
-  (get-user email))
+  (datomic/assert! (conn)
+                   (merge (get-user email)
+                          updates)))
 

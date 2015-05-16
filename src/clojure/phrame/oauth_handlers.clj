@@ -33,9 +33,10 @@
         {:keys [email]} (:body (http/get "https://www.googleapis.com/oauth2/v1/tokeninfo"
                                     {:query-params {:access_token access-token}
                                      :as :json}))]
-    (storage/swap! assoc-in [:users email]
-                   {:email email
-                    :refresh-token refresh-token})
+    (storage/update-user email
+                         {:<type> :user
+                          :email email
+                          :refresh-token refresh-token})
     (response/redirect (:success-url config "/"))))
 
 (def routes

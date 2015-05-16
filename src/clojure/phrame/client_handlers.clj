@@ -53,7 +53,7 @@
      :aspect-ratio (/ width height)}))
 
 (defn client-login [client {:keys [id token screen]}]
-  (let [phrame (get-in @storage/data [:phrames id])
+  (let [phrame (storage/get-frame id)
         channel (:channel client)]
     (println "token:" token "expected:" (:token phrame) "screen:" screen)
     (condp = token
@@ -66,7 +66,7 @@
       "UNKNOWN"
       (let [token (uuid)]
         (println "new phrame:" id)
-        (storage/swap! assoc-in [:phrames id] {:token token})
+        (storage/update-frame id {:token token})
         (send-client! client "set_token" token)
         (send-client! client "login" "accepted")
         client)
