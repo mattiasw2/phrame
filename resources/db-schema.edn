@@ -1,37 +1,40 @@
 (defentity picasa-album
-  (updated :instant "")
-  (images :ref "")
-  (picasa-id :long ""
+  (updated :instant "Last update timestamp at Google")
+  (images :ref "Images when last synced"
+          :cardinality :many)
+  (picasa-id :long "ID on Google's end"
              :unique :value)
-  (title :string "")
-  (url :string ""))
+  (title :string "Title")
+  (url :string "API URL"))
 
 (defentity impression
-  (frame :ref "")
-  (when :instant "")
-  (image :ref ""))
+  (frame :ref "On what frame")
+  (when :instant "Timestamp")
+  (image :ref "Which image"))
 
 (defentity frame
-  (key :string "" :unique :value)
-  (feed :ref "")
-  (name :string "")
-  (token :string "")
-  (owner :ref ""))
+  (key :string "Key string used by the frame to identify itself"
+       :unique :value)
+  (feed :ref "Current image feed")
+  (name :string "Nickname")
+  (token :string "Identification token (password)")
+  (owner :ref "user that owns this frame"))
 
 (defentity image
-  (updated :instant "")
-  (width :long "")
-  (thumbnail-url :string "")
-  (picasa-id :long ""
+  (published :instant "Publication timestamp")
+  (updated :instant "Timestamp of last change on Google's end")
+  (url :string "Full image URL")
+  (thumbnail-url :string "URL of thumbnail")
+  (title :string "Given title")
+  (picasa-id :long "Google's ID for the image"
              :unique :value)
-  (size :long "")
-  (title :string "")
-  (url :string "")
-  (published :instant "")
-  (height :long ""))
+  (width :long "Image width in pixels")
+  (height :long "Image height in pixels")
+  (size :long "Image size in bytes"))
 
 (defentity user
-  (email :string "" :unique :value)
-  (password :string "")
-  (albums :ref "")
-  (google-refresh-token :string ""))
+  (email :string "Google email of the user"
+         :unique :value)
+  (password :string "Password for non-OAuth login")
+  (albums :ref "Albums owned by the user")
+  (google-refresh-token :string "OAuth refresh token for Google API access"))
