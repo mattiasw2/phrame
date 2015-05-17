@@ -15,11 +15,11 @@
                          (GET "/" [] (storage/get-frames))
                          (context "/:id" [id]
                                   (GET "/" [] (storage/get-frame id))
-                                  (PUT "/" {body :body} (storage/update-frame id body))))
+                                  (PUT "/" {body :body} (storage/upsert-frame id body))))
                 (context "/user" []
                          (GET "/" [] (storage/get-users))
                          (context "/:id" [email]
                                   (GET "/" [] (storage/get-user email))
-                                  (PUT "/" {body :body} (storage/update-user email))))))
+                                  (PUT "/" {body :body} (storage/upsert-user email))))))
       (wrap-restful-format :formats [:json-kw :edn :yaml-kw :yaml-in-html :transit-json :transit-msgpack])))
 

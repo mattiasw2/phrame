@@ -66,7 +66,7 @@
       "UNKNOWN"
       (let [token (uuid)]
         (println "new phrame:" id)
-        (storage/update-frame id {:token token})
+        (storage/upsert-frame id {:token token})
         (send-client! client "set_token" token)
         (send-client! client "login" "accepted")
         client)

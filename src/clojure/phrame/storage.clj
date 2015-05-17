@@ -30,17 +30,19 @@
 ;; 
 
 (defn get-frames []
-  (map #(dissoc (apply merge (vals %)) :token)
+  (map #(dissoc % :token)
        (datomic/select-entities '[:find [?e]
                                   :where [?e :frame/key ?key]]
                                 (datomic/db (conn)))))
 
-(defn get-frame [key updates]
+(defn get-frame [key]
   (get-entity :frame/key key))
 
-(defn update-frame [key updates]
+(defn upsert-frame [key updates]
   (datomic/assert! (conn)
-                   (merge (get-frame key)
+                   (merge :<type> :frame
+                          :key key
+                          (get-frame key)
                           updates)))
 
 (defn get-users []
@@ -51,8 +53,10 @@
 (defn get-user [email]
   (get-entity :user/email email))
 
-(defn update-user [email updates]
+(defn upsert-user [email updates]
   (datomic/assert! (conn)
-                   (merge (get-user email)
+                   (merge :<type> :user
+                          :email email
+                          (get-user email)
                           updates)))
 
