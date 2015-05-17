@@ -21,13 +21,8 @@
       (connect)))
 
 (defn get-entity [key value]
-  (first (datomic/select-entities '[:find [?e]
-                                    :in $ ?key ?value
-                                    :where [?e ?key ?value]]
-                                  (datomic/db (conn))
-                                  key value)))
-
-;; 
+  (datomic/load-entity (datomic/db (conn))
+                       [key value]))
 
 (defn get-frames []
   (map #(dissoc % :token)
@@ -46,7 +41,7 @@
                           updates)))
 
 (defn get-users []
-  (datomic/select-entities '[:find [?e]
+  (datomic/select-entities '[:find [(pull ?e [:user/email])]
                              :where [?e :user/email ?email]]
                            (datomic/db (conn))))
 
