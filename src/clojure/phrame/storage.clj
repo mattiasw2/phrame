@@ -40,8 +40,8 @@
 
 (defn upsert-frame [key updates]
   (datomic/assert! (conn)
-                   (merge :<type> :frame
-                          :key key
+                   (merge {:<type> :frame
+                           :key key}
                           (get-frame key)
                           updates)))
 
@@ -55,8 +55,8 @@
 
 (defn upsert-user [email updates]
   (datomic/assert! (conn)
-                   (merge :<type> :user
-                          :email email
+                   (merge {:<type> :user
+                           :email email}
                           (get-user email)
                           updates)))
 
