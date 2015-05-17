@@ -1,5 +1,7 @@
-{;; Directory to look up OAuth tokens in
- :token-directory "/tmp"
- ;; OAuth client parameters
- :oauth-client-id "*client-id*"
- :oauth-client-secret "*client-secret*"}
+{:oauth-params {:redirect-uri "https://example.com/oauth2callback"
+                :client-id "CLIENT-ID"
+                :client-secret "CLIENT-SECRET"
+                :scope ["https://www.googleapis.com/auth/userinfo.email" "https://picasaweb.google.com/data/"]
+                :access-type "offline"}
+ :db-url "datomic:free://localhost:4334/phrame"
+ :port 9492}

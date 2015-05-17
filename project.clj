@@ -19,9 +19,11 @@
                  [sudharsh/clj-oauth2 "0.5.3"]
                  [ring "1.3.2"]
                  [ring/ring-json "0.3.1"]
+                 [ring-middleware-format "0.5.0"]
+                 [liberator "0.12.2"]
                  [compojure "1.3.3"]
                  [org.apache.httpcomponents/httpclient "4.3.5"]
-                 [alandipert/enduro "1.2.0"]
+                 [com.datomic/datomic-free "0.9.5153"]
 
                  ;; ClojureScript dependencies
                  [jarohen/chord "0.6.0"]
