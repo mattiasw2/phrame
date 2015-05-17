@@ -86,20 +86,23 @@
 (defn pull-intern [db id]
   (into {}
         (map (fn [[key value]]
-               [(keyword (name key)) (cond
-                                       (and (map? value)
-                                            (:db/id value))
-                                       (if-let [ident ((:id->db-ident db) (:db/id value))]
-                                         (keyword (name ident))
-                                         (:db/id value))
+               [(if (= (namespace key) "db")
+                  key
+                  (keyword (name key)))
 
-                                       (vector? value)
-                                       (set value)
+                (cond
+                  (= key :db/id)
+                  (if-let [ident ((:id->db-ident db) value)]
+                    (keyword (name ident))
+                    value)
 
-                                       (instance? java.util.Date value)
-                                       (time-coerce/from-date value)
+                  (vector? value)
+                  (set value)
 
-                                       :otherwise value)])
+                  (instance? java.util.Date value)
+                  (time-coerce/from-date value)
+
+                  :otherwise value)])
              (d/pull db '[*] id))))
 
 (defn select-entities [query db & args]
