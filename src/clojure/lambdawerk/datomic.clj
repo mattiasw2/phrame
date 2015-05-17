@@ -111,7 +111,9 @@
     thing))
 
 (defn load-entity [db id]
-  (intern db (d/pull db '[*] id)))
+  (let [entity (d/pull db '[*] id)]
+    (when (:db/id entity)
+      (intern db entity))))
 
 (defn select-entities [query db & args]
   (map #(->> %
