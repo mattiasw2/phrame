@@ -83,7 +83,7 @@
   [conn name]
   (current-sequence-value (:db-after @(d/transact (or (:connection conn) conn) [[:increment-sequence name]])) name))
 
-(defn pull-intern [db id]
+(defn intern [db entity]
   (into {}
         (map (fn [[key value]]
                [(if (= (namespace key) "db")
@@ -103,11 +103,21 @@
                   (time-coerce/from-date value)
 
                   :otherwise value)])
-             (d/pull db '[*] id))))
+             entity)))
+
+(defn maybe-pull [db thing]
+  (if (number? thing)
+    (d/pull db '[*] thing)
+    thing))
+
+(defn load-entity [db id]
+  (intern db (d/pull db '[*] id)))
 
 (defn select-entities [query db & args]
-   (map (partial pull-intern db)
-        (set (apply d/q query db args))))
+  (map #(->> %
+             (maybe-pull db)
+             (intern db))
+       (set (apply d/q query db args))))
 
 (defn assert! [conn entity-or-entities]
   (let [single? (map? entity-or-entities)
