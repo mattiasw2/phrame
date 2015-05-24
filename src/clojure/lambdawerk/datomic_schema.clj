@@ -66,12 +66,27 @@
       (doall (concat attributes
                      (apply concat (map define-enum @*enums*)))))))
 
+(defn- defun [name params & body]
+  (let [options (when (map? (first body))
+                  (first body))
+        code (if options (rest body) body)]
+    [{:db/id (d/tempid :db.part/user)
+      :db/ident (keyword name)
+      :db/fn (d/function (into {:lang "clojure"
+                                :params params
+                                :code code}
+                               options))}]))
+
+(defn clause-handler [clause-name]
+  (case clause-name
+    defentity defentity
+    defun defun
+    (throw+ {:type ::invalid-schema-definition-clause :clause clause-name})))
+
 (defn read-schema [filename]
   (with-open [f (java.io.PushbackReader. (io/reader filename))]
     (loop [result []]
       (if-let [clause (edn/read {:eof false} f)]
-        (if (and (list? clause)
-                 (= (first clause) 'defentity))
-          (recur (into result (apply defentity (rest clause))))
-          (throw+ {:type ::invalid-schema-definition-clause :clause clause}))
+        (recur (into result (apply (clause-handler (first clause))
+                                   (rest clause))))
         result))))

@@ -9,19 +9,28 @@
         obj)
       (throw (Exception. (str "unexpected nil value for attribute " attribute-name)))))
 
+(defn convert-keyword [type-ns attribute key]
+  (keyword (str (name type-ns) "." (name attribute)) (name key)))
+
 (defn make-entity-map [entity]
-  (let [type-ns (:<type> entity)]
-    (into {:db/id (or (:db/id entity)
-                      (d/tempid :db.part/user))}
-          (map (fn [[key value]]
-                 [(if (namespace key)
-                    key
-                    (keyword (if type-ns
-                               (name type-ns)
-                               (throw (Exception. (str "missing :<type> key in entity " entity))))
-                             (name key)))
-                  (convert-type key value)])
-               (dissoc entity :<type>)))))
+  (let [type-ns (:<type> entity)
+        entity (dissoc (into entity
+                             {:db/id (or (:db/id entity)
+                                         (d/tempid :db.part/user))})
+                       :<type>)]
+    (into {} (map (fn [[key value]]
+                    [(if (namespace key)
+                       key
+                       (keyword (if type-ns
+                                  (name type-ns)
+                                  (throw (Exception. (str "missing :<type> key in entity " entity))))
+                                (name key)))
+                     (if (and (keyword? value)
+                              (not (namespace value))
+                              type-ns)
+                       (convert-keyword type-ns key value)
+                       (convert-type key value))])
+                  entity))))
 
 (defn clean-fact [fact]
   (let [[operation entity attribute value] fact]
@@ -29,12 +38,31 @@
       [operation entity attribute (convert-type attribute value)]
       (cons (operation fact) (mapv (partial convert-type attribute) (rest fact))))))
 
+(def attributes-to-wrap-in-db-fun {:claim-transmission/status :update-transmission
+                                   :claim-transmission/next :update-transmission})
+
+(defn wrap-db-function-around-facts [fact]
+  (if-let [tagged-keyword (some (set (keys attributes-to-wrap-in-db-fun))
+                                (if (map? fact)
+                                  (keys fact)
+                                  fact))]
+    [(attributes-to-wrap-in-db-fun tagged-keyword) fact]
+    fact))
+
+(defn prepare-tx-data [tx-data]
+  (mapv #(wrap-db-function-around-facts
+          (if (map? %)
+            (make-entity-map %)
+            (clean-fact %)))
+        tx-data))
+
 (defn transact [ds tx-data]
   (d/transact (or (:connection ds) ds)
-              (map #(if (map? %)
-                      (make-entity-map %)
-                      (clean-fact %))
-                   tx-data)))
+              (prepare-tx-data tx-data)))
+
+(defn transact-async [ds tx-data]
+  (d/transact-async (or (:connection ds) ds)
+                    (prepare-tx-data tx-data)))
 
 (defn load-db-idents [db]
   (into {}
@@ -43,17 +71,7 @@
              db)))
 
 (defn install-schema [conn schema-file]
-  @(transact conn (concat (datomic-schema/read-schema schema-file)
-                          [{:db/id (d/tempid :db.part/user)
-                            :db/ident :increment-sequence
-                            :db/fn (d/function
-                                    {:lang "clojure"
-                                     :params '[ds name]
-                                     :code '(let [e (d/entity ds [:sequence-number-generator/name name])
-                                                  new-counter (inc (:sequence-number-generator/counter e 0))]
-                                              [{:db/id (:db/id e (d/tempid :db.part/user))
-                                                :sequence-number-generator/name name
-                                                :sequence-number-generator/counter new-counter}])})}])))
+  @(transact conn (concat (datomic-schema/read-schema schema-file))))
 
 (defn connect [uri schema-file & {:keys [install-schema?]}]
   (when install-schema?
@@ -83,7 +101,7 @@
   [conn name]
   (current-sequence-value (:db-after @(d/transact (or (:connection conn) conn) [[:increment-sequence name]])) name))
 
-(defn intern [db entity]
+(defn intern-entity [db entity]
   (into {}
         (map (fn [[key value]]
                [(if (= (namespace key) "db")
@@ -91,10 +109,12 @@
                   (keyword (name key)))
 
                 (cond
-                  (= key :db/id)
-                  (if-let [ident ((:id->db-ident db) value)]
-                    (keyword (name ident))
-                    value)
+                  (and (map? value)
+                       (:db/id value))
+                  (let [db-id (:db/id value)]
+                    (if-let [ident ((:id->db-ident db) db-id)]
+                      (keyword (name ident))
+                      db-id))
 
                   (vector? value)
                   (set value)
@@ -113,12 +133,12 @@
 (defn load-entity [db id]
   (let [entity (d/pull db '[*] id)]
     (when (:db/id entity)
-      (intern db entity))))
+      (intern-entity db entity))))
 
 (defn select-entities [query db & args]
   (map #(->> %
              (maybe-pull db)
-             (intern db))
+             (intern-entity db))
        (set (apply d/q query db args))))
 
 (defn assert! [conn entity-or-entities]
