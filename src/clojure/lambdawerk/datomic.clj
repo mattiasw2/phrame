@@ -1,13 +1,15 @@
 (ns lambdawerk.datomic
   (:require [clj-time.coerce :as time-coerce]
             [datomic.api :as d]
+            [slingshot.slingshot :refer [throw+]]
             [lambdawerk.datomic-schema :as datomic-schema]))
 
 (defn convert-type [attribute-name obj]
+  (when (nil? obj) ;; allow false but not nil
+    (throw+ {:type ::unexpected-nil-value-for-attribute :attribute attribute-name}))
   (or (if (instance? org.joda.time.DateTime obj)
         (time-coerce/to-date obj)
-        obj)
-      (throw (Exception. (str "unexpected nil value for attribute " attribute-name)))))
+        obj)))
 
 (defn convert-keyword [type-ns attribute key]
   (keyword (str (name type-ns) "." (name attribute)) (name key)))
@@ -23,7 +25,7 @@
                        key
                        (keyword (if type-ns
                                   (name type-ns)
-                                  (throw (Exception. (str "missing :<type> key in entity " entity))))
+                                  (throw+ {:type ::missing-type-key-in-entity :entity entity}))
                                 (name key)))
                      (if (and (keyword? value)
                               (not (namespace value))
@@ -36,24 +38,17 @@
   (let [[operation entity attribute value] fact]
     (if (#{:db/add :db/retract} operation)
       [operation entity attribute (convert-type attribute value)]
-      (cons (operation fact) (mapv (partial convert-type attribute) (rest fact))))))
-
-(def attributes-to-wrap-in-db-fun {:claim-transmission/status :update-transmission
-                                   :claim-transmission/next :update-transmission})
-
-(defn wrap-db-function-around-facts [fact]
-  (if-let [tagged-keyword (some (set (keys attributes-to-wrap-in-db-fun))
-                                (if (map? fact)
-                                  (keys fact)
-                                  fact))]
-    [(attributes-to-wrap-in-db-fun tagged-keyword) fact]
-    fact))
+      (cons operation (mapv #(if (map? %)
+                           (make-entity-map %)
+                           (convert-type attribute %))
+                        (rest fact))))))
 
 (defn prepare-tx-data [tx-data]
-  (mapv #(wrap-db-function-around-facts
-          (if (map? %)
-            (make-entity-map %)
-            (clean-fact %)))
+  (mapv (fn [fact]
+          [:dispatch-fact
+           (if (map? fact)
+             (make-entity-map fact)
+             (clean-fact fact))])
         tx-data))
 
 (defn transact [ds tx-data]
@@ -71,7 +66,7 @@
              db)))
 
 (defn install-schema [conn schema-file]
-  @(transact conn (concat (datomic-schema/read-schema schema-file))))
+  @(d/transact conn (concat (datomic-schema/read-schema schema-file))))
 
 (defn connect [uri schema-file & {:keys [install-schema?]}]
   (when install-schema?

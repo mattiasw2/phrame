@@ -74,7 +74,7 @@
       :db/ident (keyword name)
       :db/fn (d/function (into {:lang "clojure"
                                 :params params
-                                :code code}
+                                :code `(do ~@code)}
                                options))}]))
 
 (defn clause-handler [clause-name]
