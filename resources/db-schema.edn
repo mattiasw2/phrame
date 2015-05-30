@@ -20,7 +20,7 @@
   (token :string "Identification token (password)")
   (owner :ref "user that owns this frame"))
 
-(defentity image
+(defentity picasa-image
   (published :instant "Publication timestamp")
   (updated :instant "Timestamp of last change on Google's end")
   (url :string "Full image URL")
@@ -36,5 +36,6 @@
   (email :string "Google email of the user"
          :unique :value)
   (password :string "Password for non-OAuth login")
-  (albums :ref "Albums owned by the user")
+  (albums :ref "Albums owned by the user"
+          :cardinality :many)
   (google-refresh-token :string "OAuth refresh token for Google API access"))

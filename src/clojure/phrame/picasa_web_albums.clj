@@ -2,10 +2,10 @@
   (:require [clojure.edn :as edn]
             [clojure.set :as set]
             [clojure.java.io :as io]
-            [clojure.instant :as instant]
             [clojure.xml :as xml]
             [clojure.zip :as zip :refer [xml-zip]]
             [clojure.data.zip.xml :refer [xml1-> xml->] :as zip-xml]
+            [clj-time.format :as time-format]
             [clj-http.client :as http]
             [phrame.storage :as storage]))
 
@@ -64,7 +64,7 @@
               {:title :title
                :picasa-id [:gphoto:id parse-integer]
                :url :id
-               :updated [:updated instant/read-instant-timestamp]}))
+               :updated [:updated time-format/parse]}))
 
 (defn get-albums [user]
   (map make-album (xml-> (api-get user "https://picasaweb.google.com/data/feed/api/user/default")
@@ -79,8 +79,8 @@
 (defn make-photo [xml]
   (xml-to-map xml
               {:picasa-id [:gphoto:id parse-integer]
-               :published [:published instant/read-instant-timestamp]
-               :updated [:updated instant/read-instant-timestamp]
+               :published [:published time-format/parse]
+               :updated [:updated time-format/parse]
                :title :title
                :width [:gphoto:width parse-integer]
                :height [:gphoto:height parse-integer]
@@ -94,7 +94,7 @@
   (assert album)
   (map make-photo (xml-> (api-get user
                                   (str "https://picasaweb.google.com/data/feed/api/user/default/albumid/"
-                                       (:id album))
+                                       (:picasa-id album))
                                   {"imgmax" imgmax
                                    "thumbsize" thumbsize})
                          :entry)))
@@ -102,20 +102,50 @@
 (defn map-by [key coll]
   (into {} (map (fn [element] [(key element) element]) coll)))
 
+(defn synchronize-album-images [user album]
+  (let [storage-images (map-by :picasa-id (:images (storage/get-album (:picasa-id album))))
+        picasa-images (map-by :picasa-id (get-images user album))]
+    (doseq [picasa-id (set/difference (set (keys storage-images)) (set (keys picasa-images)))]
+      (println picasa-id "deleted image")
+      (storage/delete-image picasa-id))
+
+    (doseq [picasa-id (keys picasa-images)]
+      (when (or (nil? (storage-images picasa-id))
+                (not= (:updated (storage-images picasa-id)) (:updated (picasa-images picasa-id))))
+        (println picasa-id "updated image" (:updated (storage-images picasa-id)) (:updated (picasa-images picasa-id)))
+        (storage/upsert-album (:picasa-id album) {:images (:db/id (storage/upsert-image picasa-id (picasa-images picasa-id)))})))))
+
 (defn new-picasa-album [user album]
-  (println (:picasa-id album) "new picasa album"))
+  (println (:picasa-id album) "new picasa album" (:title album))
+  (let [album (storage/upsert-album (:picasa-id album) album)
+        user (storage/upsert-user (:email user) {:albums #{[:picasa-album/picasa-id (:picasa-id album)]}})]
+    (synchronize-album-images user album)))
+
+(defn update-picasa-album [user album]
+  (println (:picasa-id album) "update picasa album")
+  (storage/upsert-album (:picasa-id album) (dissoc album :images))
+  (synchronize-album-images user album))
+
+(defn delete-picasa-album [album-id]
+  (println album-id "delete picasa album")
+  (storage/delete-album album-id))
 
 (defn synchronize-albums [user]
-  (let [storage-albums (map-by :picasa-id (:albums user))
+  (let [storage-albums (map-by :picasa-id (map #(storage/get-entity (:db/id %)) (:albums user)))
         picasa-albums (map-by :picasa-id (get-albums user))
-        all-album-ids (set/union (keys storage-albums) (keys picasa-albums))]
+        all-album-ids (set/union (set (keys storage-albums)) (set (keys picasa-albums)))]
     (doseq [album-id all-album-ids]
       (cond
         (not (storage-albums album-id))
         (new-picasa-album user (picasa-albums album-id))
 
         (not (picasa-albums album-id))
-        (println album-id "deleted from picasa" album-id)
+        (delete-picasa-album album-id)
 
-        (not (= (:updated storage-albums) (:updated picasa-albums)))
-        (println album-id "updated in picasa")))))
+        (not (= (:updated (storage-albums album-id)) (:updated (picasa-albums album-id))))
+        (update-picasa-album user (picasa-albums album-id))))))
+
+#_
+(spit "/tmp/data.edn"
+      (with-out-str (binding [*print-length* nil *print-level* nil]
+                      (clojure.pprint/pprint (take 5 (map #(storage/get-album (:picasa-id %)) (:albums (storage/get-user "hans.huebner@gmail.com"))))))))

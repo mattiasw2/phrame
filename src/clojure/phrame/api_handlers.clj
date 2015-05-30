@@ -13,12 +13,12 @@
        (context "/api" []
                 (context "/frame" []
                          (GET "/" [] (storage/get-frames))
-                         (context "/:id" [id]
-                                  (GET "/" [] (storage/get-frame id))
-                                  (PUT "/" {body :body} (storage/upsert-frame id body))))
+                         (context "/:id" [key]
+                                  (GET "/" [] (storage/get-frame key))
+                                  (PUT "/" {body :body} (storage/upsert-frame key body))))
                 (context "/user" []
                          (GET "/" [] (storage/get-users))
-                         (context "/:id" [email]
+                         (context "/:email" [email]
                                   (GET "/" [] (storage/get-user email))
                                   (PUT "/" {body :body} (storage/upsert-user email))))))
       (wrap-restful-format :formats [:json-kw :edn :yaml-kw :yaml-in-html :transit-json :transit-msgpack])))
